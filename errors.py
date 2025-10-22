@@ -19,3 +19,11 @@ class FontApplyError(BaseError):
 
 class ChromiumInstallError(BaseError):
     pass
+
+
+class ConfigLoadError(BaseError):
+    pass
+
+
+class ConfigSaveError(BaseError):
+    pass

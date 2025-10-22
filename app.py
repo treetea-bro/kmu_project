@@ -5,59 +5,19 @@ import subprocess
 import sys
 
 import dearpygui.dearpygui as dpg
-from dearpygui_ext.themes import create_theme_imgui_dark, create_theme_imgui_light
 from returns.result import Failure
 
-from config import (
-    APP_TITLE,
-    CONFIG_PATH,
+from components.nav_bar import tab_comp
+from env import (
     DEFAULT_URL,
     FUNCTIONS_DIR,
     TOOLS_PATH,
 )
-from font import apply_korean_font
+from finalize import finalize
+from initialize import initialize
 from playwright_install import ensure_chromium_install
-
-
-def log(msg: str):
-    dpg.add_text(msg, parent="log_group")
-
-
-def show_alert(title: str, message: str):
-    viewport_w = dpg.get_viewport_width()
-    viewport_h = dpg.get_viewport_height()
-    win_width, win_height = 340, 140
-    pos_x = (viewport_w - win_width) // 2
-    pos_y = (viewport_h - win_height) // 2
-    tag = f"alert_window_{dpg.generate_uuid()}"
-
-    def close_alert():
-        if dpg.does_item_exist(tag):
-            dpg.delete_item(tag)
-
-    with dpg.window(
-        label=title,
-        modal=True,
-        no_close=False,
-        no_resize=True,
-        width=win_width,
-        height=win_height,
-        pos=[pos_x, pos_y],
-        tag=tag,
-    ):
-        dpg.add_text(message, wrap=win_width - 40)
-        dpg.add_spacer(height=10)
-        dpg.add_button(label="확인", width=-1, callback=close_alert)
-
-
-# -------------------------------------------------
-# 함수 파일 / tools.py 관리
-# -------------------------------------------------
-def ensure_tools():
-    os.makedirs(FUNCTIONS_DIR, exist_ok=True)
-    if not os.path.exists(TOOLS_PATH):
-        with open(TOOLS_PATH, "w", encoding="utf-8") as f:
-            f.write("# AUTO-GENERATED TOOL DEFINITIONS\nTOOLS = []\n")
+from tab.query import run_query
+from utils import log, show_alert
 
 
 def load_tools():
@@ -383,101 +343,14 @@ def show_save_dialog(code_output: str):
         dpg.add_button(label="저장", width=-1, callback=save_function_callback)
 
 
-# -------------------------------------------------
-# 테마 / 설정
-# -------------------------------------------------
-def load_config() -> dict:
-    if os.path.exists(CONFIG_PATH):
-        try:
-            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            pass
-    return {"theme": "dark"}
-
-
-def save_config(data: dict):
-    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-
-
-def toggle_theme(sender, app_data, user_data):
-    current = user_data["theme"]
-    if current == "dark":
-        new_theme = create_theme_imgui_light()
-        user_data["theme"] = "light"
-        dpg.configure_item(sender, label="Dark")
-    else:
-        new_theme = create_theme_imgui_dark()
-        user_data["theme"] = "dark"
-        dpg.configure_item(sender, label="Light")
-    dpg.bind_theme(new_theme)
-    save_config({"theme": user_data["theme"]})
-
-
-# -------------------------------------------------
-# 메인 GUI
-# -------------------------------------------------
 def main():
-    ensure_tools()
-    dpg.create_context()
-
-    match apply_korean_font(dpg):
-        case Failure(e):
-            raise e
-
-    cfg = load_config()
-    theme_state = {"theme": cfg.get("theme", "dark")}
-    if theme_state["theme"] == "light":
-        dpg.bind_theme(create_theme_imgui_light())
-    else:
-        dpg.bind_theme(create_theme_imgui_dark())
-
-    dpg.create_viewport(title=APP_TITLE, width=800, height=600)
-
-    def run_query():
-        query_text = dpg.get_value("input_query")
-        model_name = dpg.get_value("model_selector")
-        if not query_text.strip():
-            show_alert("입력 오류", "Query를 입력해주세요.")
-            return
-        log(f"선택된 모델: {model_name}")
-        log(f"입력된 Query: {query_text}")
-        log("실행되었습니다.")
-
-    def on_tab_change(sender, app_data, user_data):
-        tag = dpg.get_item_alias(app_data)
-        for content_tag in ["content_codegen", "content_query", "content_functions"]:
-            dpg.configure_item(content_tag, show=False)
-        dpg.configure_item(f"content_{tag.split('_')[1]}", show=True)
-        if tag == "tab_functions":
-            refresh_function_list()
+    initialize()
 
     with dpg.window(tag="main_window"):
-        with dpg.table(
-            header_row=False, resizable=False, policy=dpg.mvTable_SizingStretchProp
-        ):
-            dpg.add_table_column(width_stretch=True)
-            dpg.add_table_column(width_fixed=True)
-
-            with dpg.table_row():
-                with dpg.tab_bar(tag="top_tabbar", callback=on_tab_change):
-                    dpg.add_tab(label="Codegen", tag="tab_codegen")
-                    dpg.add_tab(label="Functions", tag="tab_functions")
-                    dpg.add_tab(label="User Query", tag="tab_query")
-
-                initial_label = "Dark" if theme_state["theme"] == "light" else "Light"
-                dpg.add_button(
-                    label=initial_label,
-                    width=80,
-                    callback=toggle_theme,
-                    user_data=theme_state,
-                )
-
+        tab_comp()
         dpg.add_spacer(height=8)
 
         with dpg.child_window(tag="content_area", auto_resize_y=True):
-            # Codegen 탭
             with dpg.group(tag="content_codegen", show=True):
                 with dpg.group(horizontal=True):
                     dpg.add_text("URL:")
@@ -492,7 +365,6 @@ def main():
                     callback=open_playwright_codegen,
                 )
 
-            # Functions 탭
             with dpg.group(tag="content_functions", show=False):
                 dpg.add_text("저장된 함수 목록")
                 dpg.add_child_window(
@@ -501,7 +373,6 @@ def main():
                 with dpg.group(tag="functions_group", parent="functions_scroll"):
                     dpg.add_text("아직 생성된 함수가 없습니다.")
 
-            # User Query 탭
             with dpg.group(tag="content_query", show=False):
                 with dpg.group(horizontal=True):
                     dpg.add_text("모델 선택:")
@@ -529,13 +400,14 @@ def main():
 
     match ensure_chromium_install():
         case Failure(e):
-            log(e)
+            log(str(e))
 
     dpg.setup_dearpygui()
     dpg.show_viewport()
     dpg.set_primary_window("main_window", True)
     dpg.start_dearpygui()
-    dpg.destroy_context()
+
+    finalize()
 
 
 if __name__ == "__main__":

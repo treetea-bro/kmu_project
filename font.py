@@ -1,16 +1,18 @@
 import urllib.request
 from pathlib import Path
 
+import dearpygui.dearpygui as dpg
 from returns.pipeline import pipe
 from returns.result import Failure, Result, Success
 
-from config import FONT_PATH, FONT_URL
+from env import FONT_DIR, FONT_PATH, FONT_URL
 from errors import FontApplyError, FontDownloadError
 
 
 def ensure_korean_font(retry=3) -> Result[str, Exception]:
+    Path(FONT_DIR).mkdir(parents=True, exist_ok=True)
     error = None
-    for i in range(retry):
+    for _ in range(retry):
         try:
             if not Path(FONT_PATH).exists():
                 urllib.request.urlretrieve(FONT_URL, FONT_PATH)
@@ -20,14 +22,14 @@ def ensure_korean_font(retry=3) -> Result[str, Exception]:
     return Failure(FontDownloadError("한글 폰트 다운로드 실패", error))
 
 
-def apply_korean_font(dpg) -> Result[str, Exception]:
+def apply_korean_font() -> Result[str, Exception]:
     def _apply_korean_font(result) -> Result[str, Exception]:
         match result:
             case Failure(e):
                 return Failure(e)
         try:
             with dpg.font_registry():
-                with dpg.font(FONT_PATH, 16) as kor_font:
+                with dpg.font(str(FONT_PATH), 16) as kor_font:
                     dpg.add_font_range_hint(dpg.mvFontRangeHint_Korean)
                 dpg.bind_font(kor_font)
                 return Success("한글 폰트 적용 완료")

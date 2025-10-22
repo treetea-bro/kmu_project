@@ -7,6 +7,7 @@ from agentq.core.web_driver.playwright import PlaywrightManager
 from icecream import ic
 from models import ClickVideoParams, FilterParams, SearchParams
 from PIL import Image
+
 from tools import TOOLS
 
 playwright = PlaywrightManager()

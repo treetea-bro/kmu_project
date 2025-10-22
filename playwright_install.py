@@ -17,10 +17,14 @@ def get_playwright_cache_dir() -> Path:
 
 
 def ensure_chromium_install() -> Result[str, Exception]:
+    base = get_playwright_cache_dir()
     try:
-        base = get_playwright_cache_dir()
         next(base.glob("chromium-*"))
-        subprocess.run(["uv", "run", "playwright", "install", "chromium"], check=True)
-        return Success("Chromium 설치 완료")
-    except Exception as e:
-        return Failure(ChromiumInstallError("Chromium 설치 중 오류 발생", e))
+    except Exception:
+        try:
+            subprocess.run(
+                ["uv", "run", "playwright", "install", "chromium"], check=True
+            )
+            return Success("Chromium 설치 완료")
+        except Exception as e:
+            return Failure(ChromiumInstallError("Chromium 설치 중 오류 발생", e))
