@@ -13,7 +13,7 @@ from env import (
     VIEWPORT_HEIGHT,
     VIEWPORT_WIDTH,
 )
-from font import apply_korean_font
+from initialize.font import ensure_korean_font
 
 
 def ensure_functions():
@@ -39,7 +39,7 @@ def initialize():
     dpg.create_viewport(title=APP_TITLE, width=VIEWPORT_WIDTH, height=VIEWPORT_HEIGHT)
     ensure_functions()
     ensure_tools()
-    match apply_korean_font():
+    match ensure_korean_font():
         case Failure(e):
             raise e
 

@@ -1,2 +1,11 @@
 # AUTO-GENERATED TOOL DEFINITIONS
-TOOLS = []
+TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "zz",
+            "description": "zz",
+            "parameters": {}
+        }
+    }
+]
