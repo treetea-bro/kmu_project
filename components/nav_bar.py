@@ -24,9 +24,9 @@ def navbar_comp():
         dpg.add_table_column(width_fixed=True)
         with dpg.table_row():
             with dpg.tab_bar(tag="top_tabbar", callback=on_tab_change):
-                dpg.add_tab(label="Codegen", tag="tab_codegen")
-                dpg.add_tab(label="Functions", tag="tab_functions")
-                dpg.add_tab(label="Query", tag="tab_query")
+                dpg.add_tab(label="함수 생성", tag="tab_codegen")
+                dpg.add_tab(label="함수 리스트", tag="tab_functions")
+                dpg.add_tab(label="프롬프트", tag="tab_query")
 
             initial_color = "Dark" if cfg["theme"] == "light" else "Light"
             dpg.add_button(

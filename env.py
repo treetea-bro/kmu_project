@@ -3,7 +3,7 @@ from pathlib import Path
 APP_TITLE = "Function Generation to Action Execution"
 VIEWPORT_WIDTH = 800
 VIEWPORT_HEIGHT = 600
-DEFAULT_URL = "https://youtube.com"
+DEFAULT_URL = "https://naver.com"
 
 APP_DIR = Path(__file__).parent
 

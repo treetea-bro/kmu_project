@@ -76,20 +76,25 @@ def refresh_function_list():
         desc = func["description"]
         file_path = os.path.join(FUNCTIONS_DIR, f"{name}.py")
 
-        # ▶ 실행 콜백
         def make_run_callback(f=file_path, func_name=name):
             def _run():
-                log(f"▶ {func_name}.py 실행 중...")
+                log(f"{func_name}.py 실행")
                 try:
-                    result = subprocess.run(
+                    process = subprocess.Popen(
                         [sys.executable, f],
-                        capture_output=True,
+                        stdout=sys.stdout,
+                        stderr=sys.stderr,
                         text=True,
+                        # start_new_session=True,
                     )
-                    if result.stdout.strip():
-                        log(f"✅ 출력:\n{result.stdout.strip()}")
-                    if result.stderr.strip():
-                        log(f"⚠️ 오류:\n{result.stderr.strip()}")
+
+                    def read_output():
+                        _ = process.communicate()
+
+                    import threading
+
+                    threading.Thread(target=read_output, daemon=True).start()
+
                 except Exception as e:
                     show_alert("실행 오류", f"{func_name}.py 실행 중 오류 발생:\n{e}")
 

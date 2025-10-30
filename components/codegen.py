@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import subprocess
 import sys
 
@@ -68,6 +69,23 @@ def show_save_dialog(code_output: str):
     pos_y = (viewport_h - win_height) // 2
     tag = f"save_window_{dpg.generate_uuid()}"
 
+    code_output = re.sub(r"^\s*page\d*\.close\(\)\s*\n?", "", code_output, flags=re.M)
+
+    def insert_keepalive(match: re.Match) -> str:
+        return (
+            "    while True:\n"
+            "        try:\n"
+            "            _ = page.title()\n"
+            "            time.sleep(1)\n"
+            "        except Exception:\n"
+            "            break\n\n"
+            "    page.close()"
+        )
+
+    code_output = re.sub(
+        r"^([ \t]*)page\.close\(\)", insert_keepalive, code_output, count=1, flags=re.M
+    )
+
     def save_function_callback():
         filename = dpg.get_value("input_filename").strip()
         desc = dpg.get_value("input_desc").strip()
@@ -78,6 +96,7 @@ def show_save_dialog(code_output: str):
         file_path = os.path.join(FUNCTIONS_DIR, f"{filename}.py")
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(f"# {desc}\n")
+            f.write("import time\n")
             f.write(code_output)
 
         if dpg.does_item_exist(tag):
@@ -114,7 +133,7 @@ def open_playwright_codegen(sender, app_data, user_data):
         show_alert("입력 오류", "URL을 입력해주세요.")
         return
 
-    log(f"Codegen 시작: {url}")
+    log(f"함수 기록 시작: {url}")
     log("브라우저 창을 닫으면 코드가 저장됩니다...")
 
     tmp_path = os.path.join(FUNCTIONS_DIR, "tmp_codegen.py")
@@ -133,7 +152,7 @@ def open_playwright_codegen(sender, app_data, user_data):
         tmp_path,
     ]
     try:
-        subprocess.run(cmd)  # 브라우저 닫힐 때까지 대기
+        subprocess.run(cmd)
         with open(tmp_path, "r", encoding="utf-8") as f:
             code_output = f.read()
         os.remove(tmp_path)
@@ -149,7 +168,7 @@ def codegen_comp():
             dpg.add_input_text(tag="input_url", width=-1, default_value=DEFAULT_URL)
         dpg.add_spacer(height=10)
         dpg.add_button(
-            label="Codegen 녹화 시작",
+            label="함수 녹화 시작",
             width=-1,
             height=40,
             callback=open_playwright_codegen,
