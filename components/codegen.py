@@ -162,7 +162,7 @@ def open_playwright_codegen(sender, app_data, user_data):
 
 
 def codegen_comp():
-    with dpg.group(tag="content_codegen", show=True):
+    with dpg.group(tag="content_codegen", show=False):
         with dpg.group(horizontal=True):
             dpg.add_text("URL:")
             dpg.add_input_text(tag="input_url", width=-1, default_value=DEFAULT_URL)

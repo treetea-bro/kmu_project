@@ -16,9 +16,9 @@ def main_window():
     with dpg.window(tag="main_window"):
         navbar_comp()
         dpg.add_spacer(height=8)
+        query_comp()
         codegen_comp()
         functions_comp()
-        query_comp()
 
         dpg.add_spacer(height=8)
 

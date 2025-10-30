@@ -42,9 +42,9 @@ def save_config(data: dict) -> Result[str, Exception]:
 def toggle_theme(sender):
     if cfg["theme"] == "dark":
         dpg.bind_theme(create_theme_imgui_light())
-        dpg.configure_item(sender, label="Dark")
+        dpg.configure_item(sender, label="어둡게")
         cfg["theme"] = "light"
     else:
         dpg.bind_theme(create_theme_imgui_dark())
-        dpg.configure_item(sender, label="Light")
+        dpg.configure_item(sender, label="밝게")
         cfg["theme"] = "dark"

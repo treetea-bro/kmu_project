@@ -37,17 +37,27 @@ def show_code_preview(filename: str):
 
     viewport_w = dpg.get_viewport_width()
     viewport_h = dpg.get_viewport_height()
-    win_width, win_height = 600, 500
+    win_width, win_height = 800, 600
     pos_x = (viewport_w - win_width) // 2
     pos_y = (viewport_h - win_height) // 2
     tag = f"preview_window_{dpg.generate_uuid()}"
+    input_tag = f"code_input_{dpg.generate_uuid()}"
 
     def close_preview():
         if dpg.does_item_exist(tag):
             dpg.delete_item(tag)
 
+    def save_code():
+        new_code = dpg.get_value(input_tag)
+        try:
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(new_code)
+            log(f"저장 완료: {filename} 파일의 내용이 수정되었습니다.")
+        except Exception as e:
+            log(f"저장 실패: 파일 내용 수정 중 오류 발생:\n{e}")
+
     with dpg.window(
-        label=f"📄 {filename}",
+        label=f"{filename}",
         modal=True,
         no_close=False,
         width=win_width,
@@ -56,10 +66,18 @@ def show_code_preview(filename: str):
         tag=tag,
     ):
         dpg.add_input_text(
-            default_value=code, multiline=True, readonly=True, width=-1, height=-1
+            tag=input_tag,
+            default_value=code,
+            multiline=True,
+            readonly=False,
+            width=-1,
+            height=win_height - 100,
         )
         dpg.add_spacer(height=10)
-        dpg.add_button(label="닫기", width=-1, callback=close_preview)
+
+        with dpg.group(horizontal=True):
+            dpg.add_button(label="저장", width=120, callback=save_code)
+            dpg.add_button(label="닫기", width=120, callback=close_preview)
 
 
 def refresh_function_list():
