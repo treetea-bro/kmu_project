@@ -17,9 +17,11 @@
         default = pkgs.mkShell {
           packages = with pkgs; [
             uv
+            nodejs_22
           ];
 
           shellHook = ''
+            echo "Node.js: $(node --version)"
             echo "uv: $(uv --version)"
             echo ""
           '';

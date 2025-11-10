@@ -12,7 +12,6 @@ dependencies = [
     "ollama>=0.6.0",
     "openai>=2.6.1",
     "pillow>=12.0.0",
-    "playwright>=1.55.0",
     "pynput>=1.8.1",
     "python-dotenv>=1.2.1",
     "returns>=0.26.0",
