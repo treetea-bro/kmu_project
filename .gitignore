@@ -3,4 +3,7 @@
 __pycache__
 fonts
 functions
+audios
 tools.py
+.env
+.DS_Store

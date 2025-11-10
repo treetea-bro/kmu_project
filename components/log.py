@@ -2,7 +2,7 @@ import platform
 
 import dearpygui.dearpygui as dpg
 
-from utils import log
+from utils.dpg_ui import log
 
 
 def log_comp():

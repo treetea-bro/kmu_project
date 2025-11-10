@@ -1,3 +1,4 @@
+# functions.py
 import os
 import subprocess
 import sys
@@ -9,7 +10,7 @@ from env import (
     FUNCTIONS_DIR,
     TOOLS_PATH,
 )
-from utils import log, show_alert
+from utils.dpg_ui import log, show_alert
 
 
 def load_tools():

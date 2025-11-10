@@ -1,3 +1,4 @@
+# query.py
 import importlib.util
 import os
 import subprocess
@@ -7,7 +8,8 @@ import threading
 import dearpygui.dearpygui as dpg
 import ollama
 
-from utils import log, show_alert
+from utils.dpg_ui import log, show_alert
+from utils.stt import stt
 
 
 def load_tools():
@@ -49,8 +51,7 @@ def run_script_async(file_path: str):
     threading.Thread(target=_run, daemon=True).start()
 
 
-def run_query():
-    query_text = dpg.get_value("input_query")
+def run_query(query_text: str):
     model_name = dpg.get_value("model_selector")
 
     if not query_text.strip():
@@ -77,6 +78,8 @@ def run_query():
                 {"role": "user", "content": query_text},
             ],
             tools=tools,
+            think=False,
+            keep_alive="1h",
         )
 
         message = response.get("message", {})
@@ -98,8 +101,10 @@ def run_query():
                 log(f"⚠️ 파일을 찾을 수 없습니다: {file_path}")
 
     except Exception as e:
-        show_alert("오류 발생", str(e))
-        log(f"예외 발생: {e}")
+        log(f"LLM 실행 중 오류 발생: {e}")
+
+
+stt(run_query)
 
 
 def query_comp():
@@ -107,8 +112,8 @@ def query_comp():
         with dpg.group(horizontal=True):
             dpg.add_text("모델 선택:")
             dpg.add_combo(
-                items=["qwen3:4b", "qwen3:14b"],
-                default_value="qwen3:4b",
+                items=["qwen2.5:3b", "qwen3:4b", "qwen3:14b"],
+                default_value="qwen2.5:3b",
                 width=-1,
                 tag="model_selector",
             )
@@ -119,4 +124,9 @@ def query_comp():
                 tag="input_query", width=-1, on_enter=True, callback=run_query
             )
         dpg.add_spacer(height=10)
-        dpg.add_button(label="실행", width=-1, height=40, callback=run_query)
+        dpg.add_button(
+            label="실행",
+            width=-1,
+            height=40,
+            callback=lambda: run_query(dpg.get_value("input_query")),
+        )

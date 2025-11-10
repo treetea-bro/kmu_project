@@ -1,3 +1,4 @@
+# app.py
 import dearpygui.dearpygui as dpg
 from returns.result import Failure
 
@@ -9,7 +10,7 @@ from components.query import query_comp
 from finalize import finalize
 from initialize import initialize
 from playwright_install import ensure_chromium_install
-from utils import log
+from utils.dpg_ui import log
 
 
 def main_window():

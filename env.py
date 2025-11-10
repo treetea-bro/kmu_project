@@ -16,5 +16,7 @@ CONFIG_PATH = CONFIG_DIR / "config.json"
 
 FUNCTIONS_DIR = APP_DIR / "functions"
 
+AUDIOS_DIR = APP_DIR / "audios"
+
 TOOLS_DIR = APP_DIR
 TOOLS_PATH = TOOLS_DIR / "tools.py"

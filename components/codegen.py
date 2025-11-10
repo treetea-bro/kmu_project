@@ -11,7 +11,7 @@ from env import (
     FUNCTIONS_DIR,
     TOOLS_PATH,
 )
-from utils import log, show_alert
+from utils.dpg_ui import log, show_alert
 
 
 def _get_description_for_function(filename: str) -> str:
@@ -69,7 +69,7 @@ def show_save_dialog(code_output: str):
     pos_y = (viewport_h - win_height) // 2
     tag = f"save_window_{dpg.generate_uuid()}"
 
-    code_output = re.sub(r"^\s*page\d*\.close\(\)\s*\n?", "", code_output, flags=re.M)
+    code_output = re.sub(r"^\s*page\d*\.close\(\)", "", code_output, flags=re.M)
 
     def insert_keepalive(match: re.Match) -> str:
         return (
@@ -79,11 +79,15 @@ def show_save_dialog(code_output: str):
             "            time.sleep(1)\n"
             "        except Exception:\n"
             "            break\n\n"
-            "    page.close()"
+            "    context.close()"
         )
 
     code_output = re.sub(
-        r"^([ \t]*)page\.close\(\)", insert_keepalive, code_output, count=1, flags=re.M
+        r"^([ \t]*)context\.close\(\)",
+        insert_keepalive,
+        code_output,
+        count=1,
+        flags=re.M,
     )
 
     def save_function_callback():

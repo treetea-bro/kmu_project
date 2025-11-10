@@ -27,6 +27,11 @@ def ensure_tools():
             f.write("# AUTO-GENERATED TOOL DEFINITIONS\nTOOLS = []\n")
 
 
+def ensure_audio_dir():
+    """프로젝트 루트에 audios 폴더 생성"""
+    Path(FUNCTIONS_DIR).mkdir(parents=True, exist_ok=True)
+
+
 def init_theme():
     if cfg["theme"] == "light":
         dpg.bind_theme(create_theme_imgui_light())
