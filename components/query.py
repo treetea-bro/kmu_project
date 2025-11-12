@@ -112,8 +112,8 @@ def query_comp():
         with dpg.group(horizontal=True):
             dpg.add_text("모델 선택:")
             dpg.add_combo(
-                items=["qwen2.5:3b", "qwen3:4b", "qwen3:14b"],
-                default_value="qwen2.5:3b",
+                items=["qwen2.5:7b", "qwen3:4b", "qwen3:14b"],
+                default_value="qwen2.5:7b",
                 width=-1,
                 tag="model_selector",
             )
