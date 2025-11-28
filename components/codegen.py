@@ -122,7 +122,7 @@ def show_save_dialog(code_output: str):
     ):
         dpg.add_text("생성된 함수를 저장합니다.")
         dpg.add_spacer(height=10)
-        dpg.add_text("파일 이름")
+        dpg.add_text("함수명")
         dpg.add_input_text(tag="input_filename", width=-1)
         dpg.add_spacer(height=5)
         dpg.add_text("Description")

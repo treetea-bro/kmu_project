@@ -27,7 +27,7 @@ def load_tools():
     return getattr(module, "TOOLS", [])
 
 
-def run_script_async(file_path: str):
+def run_script(file_path: str):
     """별도 쓰레드에서 subprocess로 파이썬 스크립트 실행 (비블로킹)"""
 
     def _run():
@@ -96,7 +96,7 @@ def run_query(query_text: str):
 
             if os.path.exists(file_path):
                 log(f"{fn_name}.py 실행 시작")
-                run_script_async(file_path)
+                run_script(file_path)
             else:
                 log(f"⚠️ 파일을 찾을 수 없습니다: {file_path}")
 

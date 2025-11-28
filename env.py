@@ -1,6 +1,6 @@
 from pathlib import Path
 
-APP_TITLE = "Mari for your assistant"
+APP_TITLE = "HybridFlow for your assistant"
 VIEWPORT_WIDTH = 800
 VIEWPORT_HEIGHT = 600
 DEFAULT_URL = "https://naver.com"
