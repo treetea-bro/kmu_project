@@ -227,17 +227,12 @@ def refresh_function_list():
 
             return _delete
 
-        # 미리보기 콜백 (변경 없음)
         def make_preview_callback(f_name=f"{name}.py"):
             return lambda: show_code_preview(f_name)
 
-        # ------------------------------------------------------------------
-        # UI Structure Reverted to Original Style
-        # ------------------------------------------------------------------
         with dpg.group(
             parent="functions_group",
-        ):  # height=None으로 유연하게 조정
-            # 1. 함수 이름 및 버튼 행
+        ):
             with dpg.table(
                 header_row=False, resizable=False, policy=dpg.mvTable_SizingStretchProp
             ):

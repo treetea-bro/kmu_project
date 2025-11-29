@@ -16,7 +16,6 @@ def load_tools():
     """tools.py를 안전하게 동적 import해서 TOOLS 리스트 반환"""
     tools_path = os.path.join(os.getcwd(), "tools.py")
     if not os.path.exists(tools_path):
-        # 파일이 없으면 빈 리스트 반환 (초기 상태)
         return []
 
     try:
@@ -42,7 +41,6 @@ def run_script(file_path: str, args: dict = None):
         try:
             cmd = [sys.executable, file_path]
 
-            # 인자가 있다면 커맨드라인 아규먼트로 추가
             if args:
                 for key, value in args.items():
                     cmd.append(f"--{key}")
@@ -55,7 +53,7 @@ def run_script(file_path: str, args: dict = None):
                 stdout=sys.stdout,
                 stderr=sys.stderr,
                 text=True,
-                encoding="utf-8",  # 한글 출력 대응
+                encoding="utf-8",
             )
 
             def read_output():
@@ -82,9 +80,6 @@ def run_query(query_text: str):
 
     try:
         tools = load_tools()
-
-        # tools가 비어있으면 일반 대화 모드로 동작할지, 에러를 낼지 결정
-        # 여기서는 함수 호출 테스트이므로 진행
 
         response = ollama.chat(
             model=model_name,
@@ -127,7 +122,6 @@ def run_query(query_text: str):
         log(f"LLM 실행 중 오류 발생: {e}")
 
 
-# STT 연결
 stt(run_query)
 
 
@@ -140,7 +134,7 @@ def query_comp():
                     "qwen2.5:7b",
                     "qwen2.5-coder:7b",
                     "llama3.1:8b",
-                ],  # 로컬에 있는 모델명으로 수정 필요
+                ],
                 default_value="qwen2.5:7b",
                 width=-1,
                 tag="model_selector",

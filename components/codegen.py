@@ -13,22 +13,6 @@ from env import (
 )
 from utils.dpg_ui import log, show_alert
 
-# --- Helper Functions for File I/O ---
-
-
-def _get_description_for_function(filename: str) -> str:
-    """각 함수 파일 내 첫 번째 주석 줄을 description으로 사용"""
-    file_path = os.path.join(FUNCTIONS_DIR, filename)
-    try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            first_line = f.readline().strip()
-            if first_line.startswith("#"):
-                # 파일에서 읽은 설명을 반환 (실제로는 add_tools_py에서 사용되지 않음. UI에서 받은 desc 사용)
-                return first_line.lstrip("#").strip()
-    except Exception:
-        pass
-    return "No description"
-
 
 def load_existing_tools() -> list:
     """tools.py에서 현재 정의된 도구 목록을 로드"""
@@ -107,15 +91,11 @@ def params_to_schema(params):
     return {"type": "object", "properties": properties, "required": required}
 
 
-# --- UI & Logic ---
-
-
 def save_function_to_file(code_output: str):
     """
     모달 창 없이, UI에서 입력받은 함수명과 설명으로 파일을 저장하고 tools.py를 갱신합니다.
     """
 
-    # 1. UI에서 값 가져오기
     filename = dpg.get_value("input_filename").strip()
     desc = dpg.get_value("input_desc").strip()
 
@@ -123,7 +103,6 @@ def save_function_to_file(code_output: str):
         show_alert("오류", "함수명과 설명을 모두 입력해주세요.")
         return
 
-    # 2. Playwright keepalive 및 run 정의 수정 (기존과 동일)
     code_output = re.sub(r"^\s*page\d*\.close\(\)", "", code_output, flags=re.M)
 
     def insert_keepalive(match: re.Match) -> str:
@@ -145,7 +124,6 @@ def save_function_to_file(code_output: str):
         flags=re.M,
     )
 
-    # 3. 파라미터를 run 함수 정의에 주입 (기존과 동일)
     current_params = get_all_params()
 
     def inject_params_into_code(code_output, params):
@@ -166,7 +144,19 @@ def save_function_to_file(code_output: str):
 
     new_code_output = inject_params_into_code(code_output, current_params)
 
-    # 4. argparse를 사용하는 main 블록 생성기
+    for p in current_params:
+        var_name = p["variable"]
+
+        placeholder_literal = f'"${{{var_name}}}"'  #
+
+        new_code_output = new_code_output.replace(
+            placeholder_literal,
+            var_name,
+        )
+
+        placeholder_bare = f"${{{var_name}}}"
+        new_code_output = new_code_output.replace(placeholder_bare, var_name)
+
     def generate_main_block(params):
         lines = [
             "",
@@ -176,7 +166,6 @@ def save_function_to_file(code_output: str):
             "    parser = argparse.ArgumentParser()",
         ]
 
-        # UI에서 설정한 파라미터들을 argparse 인자로 추가
         arg_list = []
         for p in params:
             var_name = p["variable"]
@@ -184,13 +173,12 @@ def save_function_to_file(code_output: str):
 
             lines.append(
                 f'    parser.add_argument("--{var_name}", type=str, required=True, help="{p["desc"]}")'
-            )  # 모든 인자를 str로 받도록 통일 (실행 시 타입 변환은 파이썬 코드가 처리하도록)
+            )
             arg_list.append(f"{var_name}=args.{var_name}")
 
         lines.append("    args = parser.parse_args()")
         lines.append("")
 
-        # run 함수 호출부 구성
         args_str = ", ".join(arg_list)
         if args_str:
             args_str = ", " + args_str
@@ -200,10 +188,8 @@ def save_function_to_file(code_output: str):
 
         return "\n".join(lines)
 
-    # 5. 기존 Playwright 실행 블록 제거
     def remove_sync_playwright_block(code_output: str) -> str:
         """기존 Playwright 생성 코드 (with sync_playwright() as playwright: run(playwright)) 제거"""
-        # with sync_playwright() 로 시작하고 run(playwright)로 끝나는 블록을 제거
         pattern = re.compile(
             r"^([ \t]*with sync_playwright\(\) as playwright:\s*\n[ \t]*run\(playwright\)[ \t]*\n?)$",
             re.MULTILINE | re.DOTALL,
@@ -211,7 +197,6 @@ def save_function_to_file(code_output: str):
         cleaned_output = pattern.sub("", code_output).strip()
         return cleaned_output
 
-    # 6. 파일 저장 및 tools.py 갱신
     schema = params_to_schema(current_params)
     main_block = generate_main_block(current_params)
 
@@ -233,15 +218,7 @@ def save_function_to_file(code_output: str):
     log(f"함수 저장 완료: {filename}.py")
 
 
-def show_save_dialog(code_output: str):
-    """
-    모달 창을 제거하고 save_function_to_file을 직접 호출하도록 수정
-    """
-    save_function_to_file(code_output)
-
-
 def open_playwright_codegen(sender, app_data, user_data):
-    # ... (기존과 동일) ...
     url = dpg.get_value("input_url")
     filename = dpg.get_value("input_filename").strip()
     desc = dpg.get_value("input_desc").strip()
@@ -254,7 +231,6 @@ def open_playwright_codegen(sender, app_data, user_data):
         show_alert("입력 오류", "함수명과 설명을 모두 입력해주세요.")
         return
 
-    # 파라미터 유효성 검사 (기존과 동일)
     params = get_all_params()
     for p in params:
         if not p["variable"].strip():
@@ -281,33 +257,24 @@ def open_playwright_codegen(sender, app_data, user_data):
         tmp_path,
     ]
 
-    # 비동기로 실행하지 않고 subprocess.run으로 블로킹해야 codegen 종료 후 로직이 실행됨
     try:
         subprocess.run(cmd)
         if os.path.exists(tmp_path):
             with open(tmp_path, "r", encoding="utf-8") as f:
                 code_output = f.read()
             os.remove(tmp_path)
-            # 녹화된 코드를 바로 저장 로직으로 전달
-            show_save_dialog(code_output)
+            save_function_to_file(code_output)
         else:
             log("codegen이 코드를 생성하지 않고 종료되었습니다.")
     except Exception as e:
         show_alert("오류", f"open_playwright_codegen 실행 중 오류 발생:\n{e}")
 
 
-# ... (Dynamic Parameter Row Logic - 변경 없음) ...
-# delete_row_callback, add_param_row, get_all_params는 변경 없음
-
-# --- codegen_comp 수정 ---
-
-
 def codegen_comp():
-    global param_rows  # 전역 변수 초기화 방지
+    global param_rows
     param_rows = []
 
     with dpg.group(tag="content_codegen", show=False):
-        # 1. URL 입력
         with dpg.group(horizontal=True):
             dpg.add_text("URL:")
             dpg.add_input_text(tag="input_url", width=-1, default_value=DEFAULT_URL)
@@ -329,7 +296,6 @@ def codegen_comp():
             )
         dpg.add_spacer(height=10)
 
-        # 4. 파라미터 입력 (기존과 동일)
         dpg.add_text("추가 파라미터 (선택)", color=(100, 200, 255))
         dpg.add_group(tag="params_container")
         dpg.add_button(
@@ -339,7 +305,6 @@ def codegen_comp():
         )
         dpg.add_spacer(height=15)
 
-        # 5. 녹화 버튼 (기존과 동일)
         dpg.add_button(
             label="함수 녹화 시작 (Playwright)",
             width=-1,
@@ -347,10 +312,6 @@ def codegen_comp():
             callback=open_playwright_codegen,
         )
 
-
-# get_all_params, delete_row_callback, add_param_row 등의 함수는 상단에 있으므로 변경 없이 동작합니다.
-
-# --- Dynamic Parameter Row Logic ---
 
 param_rows = []
 
