@@ -31,7 +31,7 @@ def load_tools():
         return []
 
 
-def run_script(file_path: str, args: dict = None):
+def run_script(file_path: str, args: dict):
     """
     별도 쓰레드에서 subprocess로 파이썬 스크립트 실행
     args 딕셔너리가 있으면 --key value 형태로 변환하여 전달
